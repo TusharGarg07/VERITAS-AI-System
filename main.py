@@ -7,11 +7,15 @@ import os
 import numpy as np
 import pandas as pd
 import joblib
-from fastapi import FastAPI, HTTPException, Request
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, EmailStr
 from typing import List, Optional, Dict, Any
 from config import PROFESSIONAL_RISK_GUIDE, SYNERGISTIC_RISK_RULES
 
@@ -28,6 +32,11 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # --- CONFIGURATION ---
 BUNDLE_PATH = os.path.join(BASE_DIR, 'veritas_model_bundle.pkl')
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASS = os.getenv("EMAIL_PASS")
+ADMIN_EMAIL = "phenominal0525@gmail.com"
 
 # --- GLOBAL VARIABLES ---
 model = None
@@ -47,6 +56,7 @@ class SensorData(BaseModel):
     occupancy_count: int = Field(..., description="Number of occupants", ge=0)
     motion_detected: int = Field(1, description="Motion detected (0 or 1)", ge=0, le=1)
     light_intensity: float = Field(500, description="Light intensity in Lux", ge=0)
+    email: Optional[str] = Field(None, description="User email for reports")
 
     class Config:
         populate_by_name = True
@@ -138,6 +148,10 @@ def prepare_input_features(data: SensorData, feature_names: List[str]):
     # Convert Pydantic model to dict, handling alias
     input_data = data.dict(by_alias=True)
     
+    # Remove email if present as it's not a model feature
+    if 'email' in input_data:
+        del input_data['email']
+    
     # Ensure keys match what pandas expects (renaming pm2_5 back to pm2.5 is handled by by_alias=True if we use the alias)
     # However, we need to be careful with the keys.
     # The original code expected keys like 'pm2.5'.
@@ -212,13 +226,34 @@ def calculate_health_score(num_risks: int, synergistic_count: int) -> float:
     final_score = base_score - penalty
     return max(0.0, min(100.0, float(final_score)))
 
+def send_email_task(to_email: str, subject: str, html_content: str):
+    """Sends an email asynchronously."""
+    if not EMAIL_USER or not EMAIL_PASS:
+        print("⚠️ Email credentials not found. Skipping email.")
+        return
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_USER
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(html_content, 'html'))
+
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+            server.starttls()
+            server.login(EMAIL_USER, EMAIL_PASS)
+            server.send_message(msg)
+        print(f"✅ Email sent to {to_email}")
+    except Exception as e:
+        print(f"❌ Failed to send email to {to_email}: {e}")
+
 # --- ROUTES ---
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/api/analyze", response_model=AnalysisResponse)
-async def analyze_environment(data: SensorData):
+async def analyze_environment(data: SensorData, background_tasks: BackgroundTasks):
     if model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
@@ -306,6 +341,43 @@ async def analyze_environment(data: SensorData):
 
         # Generate Advice
         advice = generate_veritas_advice(data)
+
+        # --- EMAIL ALERT SYSTEM ---
+        # Trigger condition: Health Score < 60 OR Risk == 'Severe' (mapped from 'High')
+        is_high_risk = health_score < 60 or (holistic_assessment and holistic_assessment.level == "Severe")
+        
+        if is_high_risk and data.email:
+            # 1. Send User Report
+            user_html = templates.get_template("user_report.html").render(
+                health_score=round(health_score),
+                risk_class="high-risk" if health_score < 50 else "moderate-risk",
+                holistic_assessment=holistic_assessment.text if holistic_assessment else "N/A",
+                advice_list=advice,
+                primary_risks=primary_risks,
+                year=datetime.now().year
+            )
+            background_tasks.add_task(
+                send_email_task, 
+                data.email, 
+                "VERITAS Health Report: Critical Action Required", 
+                user_html
+            )
+
+            # 2. Send Admin Alert
+            admin_html = templates.get_template("admin_alert.html").render(
+                health_score=round(health_score),
+                user_email=data.email,
+                timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                primary_risks=primary_risks,
+                data=data.dict()
+            )
+            background_tasks.add_task(
+                send_email_task, 
+                ADMIN_EMAIL, 
+                f"🚨 VERITAS HIGH RISK ALERT - {data.email}", 
+                admin_html
+            )
+            print(f"⚠️ High risk detected ({health_score}). Email tasks queued.")
 
         return AnalysisResponse(
             primary_risks=primary_risks,

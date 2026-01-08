@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ef4444; border-radius: 10px; }
+        .header { background-color: #ef4444; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+        .alert-box { background-color: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .details { background-color: #f8fafc; padding: 15px; border-radius: 5px; }
+        .footer { text-align: center; font-size: 12px; color: #666; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 HIGH RISK ALERT</h1>
+            <p>Critical Environmental Conditions Detected</p>
+        </div>
+        
+        <div class="alert-box">
+            <strong>Warning:</strong> An environment with a Health Score of {{ health_score }} has been reported.
+        </div>
+
+        <div class="details">
+            <h3>User Details</h3>
+            <p><strong>Email:</strong> {{ user_email }}</p>
+            <p><strong>Timestamp:</strong> {{ timestamp }}</p>
+            
+            <h3>Critical Indicators</h3>
+            <ul>
+                {% for risk in primary_risks %}
+                <li><strong>{{ risk.name }}</strong> ({{ risk.level }})</li>
+                {% endfor %}
+            </ul>
+
+            <h3>System Readings</h3>
+            <ul>
+                <li>CO2: {{ data.co2 }} ppm</li>
+                <li>PM2.5: {{ data.pm2_5 }} µg/m³</li>
+                <li>Humidity: {{ data.humidity }}%</li>
+                <li>Temp: {{ data.temperature }}°C</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>VERITAS Admin Notification System</p>
+        </div>
+    </div>
+</body>
+</html>
