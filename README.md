@@ -98,7 +98,7 @@ Analyzes environmental data and returns a comprehensive risk assessment.
 *   **Environment**: Ensure the server has read access to `veritas_model_bundle.pkl`.
 *   **Security**: Place behind a reverse proxy (Nginx/Apache) with SSL termination.
 
-## Migration Notes (From AIMRAS)
+## Migration Notes 
 *   Renamed project identity to VERITAS.
 *   Refactored `app_old.py` to `main.py` and `config.py`.
 *   Updated `index.html` to use modern Tailwind CSS classes.
