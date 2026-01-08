@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VERITAS | Risk Intelligence System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Rajdhani', 'sans-serif'],
+                        mono: ['Orbitron', 'monospace'],
+                    },
+                    colors: {
+                        neon: {
+                            blue: '#00f3ff',
+                            purple: '#bc13fe',
+                            green: '#0aff0a',
+                            red: '#ff003c'
+                        },
+                        glass: {
+                            100: 'rgba(255, 255, 255, 0.05)',
+                            200: 'rgba(255, 255, 255, 0.1)',
+                            300: 'rgba(255, 255, 255, 0.15)',
+                        }
+                    },
+                    boxShadow: {
+                        'neon-blue': '0 0 10px #00f3ff, 0 0 20px #00f3ff',
+                        'neon-purple': '0 0 10px #bc13fe, 0 0 20px #bc13fe',
+                        'neon-green': '0 0 10px #0aff0a, 0 0 20px #0aff0a',
+                        'neon-red': '0 0 10px #ff003c, 0 0 20px #ff003c',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050510;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(188, 19, 254, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 243, 255, 0.1) 0%, transparent 40%);
+        }
+        .glass-panel {
+            background: rgba(17, 25, 40, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.125);
+        }
+        .gauge-circle {
+            transition: stroke-dashoffset 1s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="text-gray-200 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="glass-panel border-b border-gray-800 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-lg flex items-center justify-center shadow-neon-blue">
+                    <span class="font-mono font-bold text-white text-xl">V</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-mono font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple">VERITAS</h1>
+                    <p class="text-xs text-gray-400 tracking-widest uppercase">Versatile Environmental Risk Intelligence</p>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center space-x-4">
+                <div class="flex items-center space-x-2 text-sm text-neon-green">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    <span>System Active</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- LEFT COLUMN: SENSOR INPUT -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-2xl">
+                    <h2 class="text-xl font-mono font-bold text-neon-blue mb-6 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        SENSOR CALIBRATION
+                    </h2>
+                    
+                    <form id="analysisForm" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase">Temperature (°C)</label>
+                                <input type="number" step="0.1" name="temperature" value="25.0" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-neon-blue focus:outline-none focus:ring-1 focus:ring-neon-blue transition-colors">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase">Humidity (%)</label>
+                                <input type="number" step="0.1" name="humidity" value="50.0" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-neon-blue focus:outline-none focus:ring-1 focus:ring-neon-blue transition-colors">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase">CO2 (ppm)</label>
+                                <input type="number" step="1" name="co2" value="800" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-neon-blue focus:outline-none focus:ring-1 focus:ring-neon-blue transition-colors">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase">PM2.5 (µg/m³)</label>
+                                <input type="number" step="0.1" name="pm2.5" value="10.0" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-neon-blue focus:outline-none focus:ring-1 focus:ring-neon-blue transition-colors">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase">PM10 (µg/m³)</label>
+                                <input type="number" step="0.1" name="pm10" value="15.0" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-neon-blue focus:outline-none focus:ring-1 focus:ring-neon-blue transition-colors">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase">TVOC (ppb)</label>
+                                <input type="number" step="1" name="tvoc" value="50" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-neon-blue focus:outline-none focus:ring-1 focus:ring-neon-blue transition-colors">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase">CO (ppm)</label>
+                                <input type="number" step="0.1" name="co" value="0.5" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-neon-blue focus:outline-none focus:ring-1 focus:ring-neon-blue transition-colors">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase">Occupancy</label>
+                                <input type="number" step="1" name="occupancy_count" value="2" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-neon-blue focus:outline-none focus:ring-1 focus:ring-neon-blue transition-colors">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="w-full mt-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-lg shadow-lg transform hover:scale-[1.02] transition-all duration-200 uppercase tracking-wider font-mono">
+                            Initiate Scan
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- AI Agent Advice Panel -->
+                <div class="glass-panel rounded-2xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path></svg>
+                    </div>
+                    <h2 class="text-lg font-mono font-bold text-neon-purple mb-4">VERITAS ADVICE ENGINE</h2>
+                    <div id="adviceContainer" class="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="text-sm text-gray-400 italic text-center p-4">
+                            System awaiting data for analysis...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: DASHBOARD -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- TOP STATS -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Health Score -->
+                    <div class="glass-panel rounded-2xl p-6 flex flex-col items-center justify-center relative">
+                        <h3 class="text-gray-400 text-sm uppercase tracking-wider mb-2">Health Score</h3>
+                        <div class="relative w-32 h-32">
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" class="text-gray-800" />
+                                <circle id="healthScoreRing" cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="351.86" stroke-dashoffset="351.86" class="text-neon-green gauge-circle" />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span id="healthScoreValue" class="text-3xl font-bold font-mono text-white">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Panel -->
+                    <div class="glass-panel rounded-2xl p-6 col-span-2">
+                        <h3 class="text-gray-400 text-sm uppercase tracking-wider mb-4">System Status</h3>
+                        <div id="holisticStatus" class="flex items-center space-x-4">
+                            <div class="h-16 w-1 bg-gray-700 rounded-full"></div>
+                            <div>
+                                <h4 id="statusTitle" class="text-2xl font-bold text-white">Standby</h4>
+                                <p id="statusDesc" class="text-sm text-gray-400">Waiting for sensor input stream.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RISKS GRID -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Synergistic Risks -->
+                    <div class="glass-panel rounded-2xl p-6 border-t-4 border-neon-red min-h-[200px]">
+                        <h3 class="text-neon-red font-mono font-bold mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            SYNERGISTIC ALERTS
+                        </h3>
+                        <div id="synergisticContainer" class="space-y-3">
+                            <p class="text-sm text-gray-500">No critical combinations detected.</p>
+                        </div>
+                    </div>
+
+                    <!-- Primary Risks -->
+                    <div class="glass-panel rounded-2xl p-6 border-t-4 border-yellow-500 min-h-[200px]">
+                        <h3 class="text-yellow-500 font-mono font-bold mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            PRIMARY RISKS
+                        </h3>
+                        <div id="primaryContainer" class="space-y-3">
+                            <p class="text-sm text-gray-500">No primary risks detected.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center py-6 text-gray-600 text-sm">
+        <p>&copy; 2026 VERITAS Systems. All systems nominal.</p>
+    </footer>
+
+    <script>
+        document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'PROCESSING...';
+            btn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) throw new Error('Analysis failed');
+                
+                const result = await response.json();
+                updateDashboard(result);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('System Error: Could not process data.');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        function updateDashboard(data) {
+            // Update Health Score
+            const score = Math.round(data.health_score);
+            const scoreEl = document.getElementById('healthScoreValue');
+            const ringEl = document.getElementById('healthScoreRing');
+            const circumference = 351.86; // 2 * pi * 56
+            const offset = circumference - (score / 100) * circumference;
+            
+            scoreEl.innerText = score;
+            ringEl.style.strokeDashoffset = offset;
+            
+            // Color coding score
+            if (score >= 80) ringEl.classList.replace('text-neon-red', 'text-neon-green') || ringEl.classList.add('text-neon-green');
+            else if (score >= 50) {
+                ringEl.classList.remove('text-neon-green', 'text-neon-red');
+                ringEl.classList.add('text-yellow-500');
+            } else {
+                ringEl.classList.remove('text-neon-green', 'text-yellow-500');
+                ringEl.classList.add('text-neon-red');
+            }
+
+            // Update Holistic Status
+            const statusTitle = document.getElementById('statusTitle');
+            const statusDesc = document.getElementById('statusDesc');
+            if (data.holistic_assessment) {
+                statusTitle.innerText = data.holistic_assessment.level + " Risk Level";
+                statusDesc.innerText = data.holistic_assessment.text;
+            }
+
+            // Update Advice
+            const adviceContainer = document.getElementById('adviceContainer');
+            adviceContainer.innerHTML = '';
+            if (data.veritas_advice && data.veritas_advice.length > 0) {
+                data.veritas_advice.forEach(advice => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-800 bg-opacity-50 p-3 rounded border-l-2 border-neon-purple text-sm';
+                    div.innerText = advice;
+                    adviceContainer.appendChild(div);
+                });
+            } else {
+                adviceContainer.innerHTML = '<div class="text-sm text-green-400">All systems within optimal parameters.</div>';
+            }
+
+            // Update Synergistic Risks
+            const synContainer = document.getElementById('synergisticContainer');
+            synContainer.innerHTML = '';
+            if (data.synergistic_risks && data.synergistic_risks.length > 0) {
+                data.synergistic_risks.forEach(risk => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-red-900 bg-opacity-20 p-3 rounded border border-red-800';
+                    div.innerHTML = `
+                        <div class="font-bold text-red-400 text-sm mb-1">${risk.name}</div>
+                        <div class="text-xs text-gray-300 mb-2">${risk.interpretation}</div>
+                        <ul class="text-xs text-gray-400 list-disc list-inside">
+                            ${risk.remedies.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    `;
+                    synContainer.appendChild(div);
+                });
+            } else {
+                synContainer.innerHTML = '<p class="text-sm text-gray-500">No critical combinations detected.</p>';
+            }
+
+            // Update Primary Risks
+            const primContainer = document.getElementById('primaryContainer');
+            primContainer.innerHTML = '';
+            if (data.primary_risks && data.primary_risks.length > 0) {
+                data.primary_risks.forEach(risk => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-yellow-900 bg-opacity-20 p-3 rounded border border-yellow-800';
+                    div.innerHTML = `
+                        <div class="font-bold text-yellow-400 text-sm mb-1">${risk.name}</div>
+                        <div class="text-xs text-gray-300 mb-2">${risk.interpretation}</div>
+                    `;
+                    primContainer.appendChild(div);
+                });
+            } else {
+                primContainer.innerHTML = '<p class="text-sm text-gray-500">No primary risks detected.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

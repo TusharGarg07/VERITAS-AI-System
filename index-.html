@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIMRAS - Advanced Indoor Risk Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">AIMRAS</h1>
+            <p class="text-lg text-gray-600 mt-2">Advanced Indoor Microbial & Environmental Risk Assessment System</p>
+        </header>
+
+        <!-- Input Form -->
+        <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800">Enter Environmental Parameters</h2>
+            <form action="/predict" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Input Fields -->
+                <div>
+                    <label for="temperature" class="block text-sm font-medium text-gray-700">Temperature (°C)</label>
+                    <input type="number" step="0.1" name="temperature" id="temperature" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="humidity" class="block text-sm font-medium text-gray-700">Humidity (%)</label>
+                    <input type="number" step="0.1" name="humidity" id="humidity" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="co2" class="block text-sm font-medium text-gray-700">CO₂ (ppm)</label>
+                    <input type="number" step="1" name="co2" id="co2" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="pm2.5" class="block text-sm font-medium text-gray-700">PM2.5 (µg/m³)</label>
+                    <input type="number" step="0.1" name="pm2.5" id="pm2.5" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="pm10" class="block text-sm font-medium text-gray-700">PM10 (µg/m³)</label>
+                    <input type="number" step="0.1" name="pm10" id="pm10" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="tvoc" class="block text-sm font-medium text-gray-700">TVOC (ppb)</label>
+                    <input type="number" step="1" name="tvoc" id="tvoc" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="co" class="block text-sm font-medium text-gray-700">CO (ppm)</label>
+                    <input type="number" step="0.1" name="co" id="co" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="occupancy_count" class="block text-sm font-medium text-gray-700">Occupancy Count</label>
+                    <input type="number" step="1" name="occupancy_count" id="occupancy_count" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+
+                <!-- Submit Button -->
+                <div class="md:col-span-2 text-center mt-4">
+                    <button type="submit" class="w-full md:w-auto inline-flex justify-center py-3 px-8 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        Analyze Risks
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        {% if results %}
+        <div class="mt-10 bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800">Diagnostic Report</h2>
+            
+            <!-- Microbial Risk Alert -->
+            {% if results.microbial_risk %}
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mb-6" role="alert">
+                <p class="font-bold">Critical Alert: High Microbial Contamination Risk</p>
+                <p>The combination of detected conditions strongly indicates an environment favorable for mold, mildew, and bacterial growth.</p>
+            </div>
+            {% endif %}
+
+            <!-- Synergistic Risks -->
+            {% if results.synergistic_risks %}
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-red-700 mb-3">Synergistic Threats Detected</h3>
+                <div class="space-y-4">
+                    {% for risk in results.synergistic_risks %}
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                        <p class="font-bold text-red-900">{{ risk.name }} (Hazard Level: {{ risk.level }})</p>
+                        <p class="mt-1 text-red-800">{{ risk.interpretation }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Primary Risks -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Primary Issues Detected</h3>
+                {% if results.primary_risks %}
+                    <div class="space-y-4">
+                        {% for risk in results.primary_risks %}
+                        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                            <p class="font-bold text-yellow-900">{{ risk.name }} (Hazard Level: {{ risk.level }})</p>
+                            <p class="mt-1 text-yellow-800">{{ risk.interpretation }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-green-700 bg-green-50 p-4 rounded-lg border border-green-200">No primary risks were detected. The environment appears to be within optimal parameters.</p>
+                {% endif %}
+            </div>
+
+             <!-- Recommended Remedies -->
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Recommended Actions (Prioritized)</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-700">
+                    {% set all_remedies = [] %}
+                    {% for risk in results.synergistic_risks %}{% for remedy in risk.remedies %}{% if remedy not in all_remedies %}{{ all_remedies.append(remedy) or '' }}{% endif %}{% endfor %}{% endfor %}
+                    {% for risk in results.primary_risks %}{% for remedy in risk.remedies %}{% if remedy not in all_remedies %}{{ all_remedies.append(remedy) or '' }}{% endif %}{% endfor %}{% endfor %}
+                    
+                    {% if all_remedies %}
+                        {% for remedy in all_remedies %}
+                            <li>{{ remedy }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>No specific actions are required at this time.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Error Display -->
+        {% if error %}
+        <div class="mt-10 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+            <strong class="font-bold">Error:</strong>
+            <span class="block sm:inline">{{ error }}</span>
+        </div>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>
