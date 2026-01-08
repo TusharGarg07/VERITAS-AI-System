@@ -23,10 +23,11 @@ app = FastAPI(
 )
 
 # Setup templates
-templates = Jinja2Templates(directory="templates")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # --- CONFIGURATION ---
-BUNDLE_PATH = 'veritas_model_bundle.pkl'
+BUNDLE_PATH = os.path.join(BASE_DIR, 'veritas_model_bundle.pkl')
 
 # --- GLOBAL VARIABLES ---
 model = None
