@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import joblib
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -18,6 +19,13 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field, validator, EmailStr
 from typing import List, Optional, Dict, Any
 from config import PROFESSIONAL_RISK_GUIDE, SYNERGISTIC_RISK_RULES
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 # --- INITIALIZATION ---
 app = FastAPI(
@@ -220,11 +228,49 @@ def generate_veritas_advice(inputs: SensorData) -> List[str]:
 
     return advice if advice else ["✅ Environment ideal conditions mein hai. Koi action required nahi."]
 
-def calculate_health_score(num_risks: int, synergistic_count: int) -> float:
-    base_score = 100 - (num_risks * 25)
-    penalty = synergistic_count * 30
-    final_score = base_score - penalty
-    return max(0.0, min(100.0, float(final_score)))
+def calculate_health_score(data: SensorData, num_risks: int, synergistic_count: int) -> float:
+    """
+    Calculates a health score based on sensor data and detected risks.
+    """
+    score = 100.0
+    deductions = []
+
+    # CO2 deductions
+    if data.co2 > 2000:
+        score -= 50
+        deductions.append("CO2 > 2000ppm (-50)")
+    elif data.co2 > 1000:
+        score -= 20
+        deductions.append("CO2 > 1000ppm (-20)")
+
+    # Humidity deductions
+    if data.humidity > 85:
+        score -= 30
+        deductions.append("Humidity > 85% (-30)")
+    elif data.humidity > 70:
+        score -= 15
+        deductions.append("Humidity > 70% (-15)")
+
+    # CO deductions
+    if data.co > 9:
+        score -= 40
+        deductions.append("CO > 9ppm (-40)")
+
+    # PM2.5 deductions
+    if data.pm2_5 > 35:
+        score -= 20
+        deductions.append("PM2.5 > 35µg/m³ (-20)")
+
+    # Final score clamping
+    final_score = max(0.0, score)
+    
+    # If score is 100 but there are risks, reduce it slightly
+    if final_score == 100 and (num_risks > 0 or synergistic_count > 0):
+        final_score = 99.0
+        deductions.append("Minor risks detected (-1)")
+
+    print(f"🌡️ Health Score Calculation: Base=100, Deductions={deductions}, Final={final_score}")
+    return final_score
 
 def send_email_task(to_email: str, subject: str, html_content: str):
     """Sends an email asynchronously."""
@@ -259,7 +305,7 @@ async def analyze_environment(data: SensorData, background_tasks: BackgroundTask
 
     try:
         # Debug: Print received data
-        print(f"📥 Received Input: {data}")
+        print(f"📥 Received Input: {data.dict()}")
 
         # Prepare and predict
         input_df = prepare_input_features(data, feature_names)
@@ -283,19 +329,50 @@ async def analyze_environment(data: SensorData, background_tasks: BackgroundTask
         predictions_array = model.predict(scaled_input)
 
 
-        # Process Primary Risks
-        primary_risks = []
+        # Process ML Risks
         detected_risk_labels = []
         for i, label in enumerate(target_labels):
             if predictions_array[0, i] == 1:
                 detected_risk_labels.append(label)
-                risk_info = PROFESSIONAL_RISK_GUIDE.get(label, {})
-                primary_risks.append(RiskDetail(
-                    name=label.replace('_', ' '),
-                    level=risk_info.get("Hazard_Level", "N/A"),
-                    interpretation=risk_info.get("Interpretation", "No details available."),
-                    remedies=risk_info.get("Remedies", [])
-                ))
+
+        ml_detected_risks = detected_risk_labels.copy()
+
+        # Rule-based fallback detection (thresholds)
+        rule_detected_risks = []
+        if data.humidity > 65 and "Comfort_Humidity_High" not in detected_risk_labels:
+            detected_risk_labels.append("Comfort_Humidity_High")
+            rule_detected_risks.append("Comfort_Humidity_High")
+
+        if data.co2 > 1000 and "Risk_Poor_Ventilation" not in detected_risk_labels:
+            detected_risk_labels.append("Risk_Poor_Ventilation")
+            rule_detected_risks.append("Risk_Poor_Ventilation")
+
+        if data.pm2_5 > 25 and "Risk_High_PM2.5" not in detected_risk_labels:
+            detected_risk_labels.append("Risk_High_PM2.5")
+            rule_detected_risks.append("Risk_High_PM2.5")
+
+        if data.temperature > 30 and "Comfort_Thermal_Hot" not in detected_risk_labels:
+            detected_risk_labels.append("Comfort_Thermal_Hot")
+            rule_detected_risks.append("Comfort_Thermal_Hot")
+
+        if data.temperature < 18 and "Comfort_Thermal_Cold" not in detected_risk_labels:
+            detected_risk_labels.append("Comfort_Thermal_Cold")
+            rule_detected_risks.append("Comfort_Thermal_Cold")
+
+        logger.info(f"ML Risks: {ml_detected_risks}")
+        logger.info(f"Rule Risks: {rule_detected_risks}")
+        logger.info(f"Final Risks: {detected_risk_labels}")
+
+        # Process Primary Risks
+        primary_risks = []
+        for label in detected_risk_labels:
+            risk_info = PROFESSIONAL_RISK_GUIDE.get(label, {})
+            primary_risks.append(RiskDetail(
+                name=label.replace('_', ' '),
+                level=risk_info.get("Hazard_Level", "N/A"),
+                interpretation=risk_info.get("Interpretation", "No details available."),
+                remedies=risk_info.get("Remedies", [])
+            ))
 
         # Process Synergistic Risks
         synergistic_risks = []
@@ -311,7 +388,7 @@ async def analyze_environment(data: SensorData, background_tasks: BackgroundTask
         # Holistic Assessment
         num_risks = len(detected_risk_labels)
         synergistic_count = len(synergistic_risks)
-        health_score = calculate_health_score(num_risks, synergistic_count)
+        health_score = calculate_health_score(data, num_risks, synergistic_count)
         
         holistic_assessment = None
         if num_risks >= 3:

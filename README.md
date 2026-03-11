@@ -62,6 +62,18 @@ The application will be available at:
 *   **Dashboard**: `http://localhost:8000`
 *   **API Docs**: `http://localhost:8000/docs`
 
+### Environment Variables
+To enable the email alert system, you must configure the following environment variables. You can create a `.env` file in the project root to store these secrets.
+
+*   `EMAIL_USER`: The Gmail address used to send alert emails (e.g., `your.email@gmail.com`).
+*   `EMAIL_PASS`: The Google App Password for the `EMAIL_USER` account. This is **not** your regular password. You must generate it from your Google Account security settings.
+
+**Example `.env` file:**
+```
+EMAIL_USER="your.email@gmail.com"
+EMAIL_PASS="yourgogleappassword"
+```
+
 ## API Endpoints
 
 ### `POST /api/analyze`
