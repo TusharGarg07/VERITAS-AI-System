@@ -170,7 +170,12 @@ def prepare_input_features(data: SensorData, feature_names: List[str]):
 
     # Simulate history (since we only have one data point, we assume steady state for 24h)
     history_df = pd.concat([df] * 24, ignore_index=True)
-    history_df.index = pd.date_range(end=df.index[0], periods=24, freq='H')
+    # Pandas >=2.x deprecated 'H' frequency alias. Using lowercase 'h' for hourly frequency compatibility.
+    history_df.index = pd.date_range(
+        end=df.index[0],
+        periods=24,
+        freq='h'
+    )
     
     df_out = history_df.copy()
     df_out['hour'] = df_out.index.hour
@@ -182,7 +187,7 @@ def prepare_input_features(data: SensorData, feature_names: List[str]):
     key_sensors = ['temperature', 'humidity', 'co2', 'pm2.5']
     for col in key_sensors:
         if col in df_out.columns:
-            df_out[f'{col}_24h_mean'] = df_out[col].rolling('24H', min_periods=1).mean()
+            df_out[f'{col}_24h_mean'] = df_out[col].rolling('24h', min_periods=1).mean()
             df_out[f'{col}_1h_lag'] = df_out[col].shift(1)
             df_out[f'{col}_rate_of_change'] = df_out[col].diff()
             
