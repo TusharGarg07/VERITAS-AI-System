@@ -1,7 +1,7 @@
 # VERITAS (Versatile Environmental Risk Intelligence & Transparency Analysis System)
 
 ## Overview
-VERITAS is a state-of-the-art environmental risk assessment system designed to monitor, analyze, and provide actionable intelligence on indoor air quality. It leverages advanced machine learning models and a holistic synergy engine to detect complex, co-occurring environmental hazards.
+VERITAS is a state-of-the-art environmental risk assessment system which is designed to monitor, analyze, and provide actionable intelligence on indoor air quality. It leverages advanced machine learning models and a holistic synergy engine to detect complex, co-occurring environmental hazards.
 
 This repository contains the modernized architecture of the system, migrated from a legacy Flask application to a high-performance FastAPI backend with a futuristic, responsive frontend.
 
