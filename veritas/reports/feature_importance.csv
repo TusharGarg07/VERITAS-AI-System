@@ -1,0 +1,13 @@
+Feature,Importance
+co2,0.5290099792658005
+pm2.5,0.47099002073419954
+humidity,0.0
+temperature,0.0
+pm10,0.0
+tvoc,0.0
+co,0.0
+light_intensity,0.0
+motion_detected,0.0
+occupancy_count,0.0
+heat_index,0.0
+co2_pm_ratio,0.0

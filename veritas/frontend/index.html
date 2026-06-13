@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VERITAS AI | Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="cyberpunk-theme">
+    <div id="app" class="command-center">
+        <!-- TOP NAVIGATION -->
+        <nav class="top-nav">
+            <div class="logo-section">
+                <div class="logo-icon">V</div>
+                <div class="logo-text">
+                    <h1>VERITAS <span class="accent">AI</span></h1>
+                    <p class="subtitle">Versatile Environmental Risk Intelligence</p>
+                </div>
+            </div>
+            <div class="system-status">
+                <div class="status-item">
+                    <span class="label">SYSTEM:</span>
+                    <span id="system-indicator" class="value online">ACTIVE</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">SESSION:</span>
+                    <span id="session-timestamp" class="value">00:00:00</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">UPLINK:</span>
+                    <span id="uplink-status" class="value">STABLE</span>
+                </div>
+            </div>
+        </nav>
+
+        <main class="dashboard-grid">
+            <!-- ROW 1 -->
+            <div class="row row-1">
+                <!-- LEFT: SENSOR CALIBRATION -->
+                <section class="panel glass sensor-calibration">
+                    <div class="panel-header">
+                        <span class="icon">⚙️</span>
+                        <h3>SENSOR CALIBRATION</h3>
+                    </div>
+                    <div class="form-container">
+                        <div class="input-group">
+                            <label>Target Email</label>
+                            <input type="email" id="user-email" placeholder="ARCHITECT@VERITAS.AI">
+                        </div>
+                        <div class="input-grid">
+                            <div class="input-item">
+                                <label>TEMP (°C)</label>
+                                <input type="number" id="sim-temp" value="24.5" step="0.1">
+                            </div>
+                            <div class="input-item">
+                                <label>HUMID (%)</label>
+                                <input type="number" id="sim-humid" value="45.0" step="0.1">
+                            </div>
+                            <div class="input-item">
+                                <label>CO2 (PPM)</label>
+                                <input type="number" id="sim-co2" value="600">
+                            </div>
+                            <div class="input-item">
+                                <label>PM2.5</label>
+                                <input type="number" id="sim-pm25" value="12.0">
+                            </div>
+                            <div class="input-item">
+                                <label>PM10</label>
+                                <input type="number" id="sim-pm10" value="18.0">
+                            </div>
+                            <div class="input-item">
+                                <label>TVOC (PPB)</label>
+                                <input type="number" id="sim-tvoc" value="150">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Scenario Protocol</label>
+                            <select id="scenario-select">
+                                <option value="closed_room">Closed Room</option>
+                                <option value="high_occupancy">High Occupancy</option>
+                                <option value="poor_ventilation">Poor Ventilation</option>
+                            </select>
+                        </div>
+                        <button id="run-sim" class="btn-primary glow-btn">INITIATE SCAN</button>
+                    </div>
+                </section>
+
+                <!-- CENTER: LIVE TREND -->
+                <section class="panel glass trend-analysis">
+                    <div class="panel-header">
+                        <span class="icon">📈</span>
+                        <h3>LIVE ENVIRONMENTAL TREND</h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="liveTrendChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- RIGHT: AI HEALTH SCORE -->
+                <section class="panel glass health-score-panel">
+                    <div class="panel-header">
+                        <span class="icon">🛡️</span>
+                        <h3>AI HEALTH SCORE</h3>
+                    </div>
+                    <div class="score-container">
+                        <div class="progress-ring-wrapper">
+                            <svg class="progress-ring" width="160" height="160">
+                                <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.1)" stroke-width="12" fill="transparent" r="70" cx="80" cy="80"/>
+                                <circle id="health-progress" class="progress-ring__circle" stroke="#00f2ff" stroke-width="12" stroke-linecap="round" fill="transparent" r="70" cx="80" cy="80"/>
+                            </svg>
+                            <div id="health-score-value" class="score-text">100</div>
+                        </div>
+                        <p id="health-status-label" class="status-label">SYSTEM OPTIMAL</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ROW 2 -->
+            <div class="row row-2">
+                <!-- LEFT: SYNERGISTIC ALERTS -->
+                <section class="panel glass synergy-panel">
+                    <div class="panel-header">
+                        <span class="icon">⚠️</span>
+                        <h3>SYNERGISTIC ALERTS</h3>
+                    </div>
+                    <div id="synergy-list" class="alert-grid">
+                        <p class="empty-state">No synergistic risks detected.</p>
+                    </div>
+                </section>
+
+                <!-- RIGHT: PRIMARY RISKS -->
+                <section class="panel glass risk-panel">
+                    <div class="panel-header">
+                        <span class="icon">☢️</span>
+                        <h3>PRIMARY RISKS</h3>
+                    </div>
+                    <div id="risk-list" class="risk-grid">
+                        <p class="empty-state">Environment within safety parameters.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ROW 3 -->
+            <div class="row row-3">
+                <!-- LEFT: ACTIONABLE INTELLIGENCE -->
+                <section class="panel glass action-panel">
+                    <div class="panel-header">
+                        <span class="icon">⚡</span>
+                        <h3>ACTIONABLE INTELLIGENCE</h3>
+                    </div>
+                    <div id="action-list" class="action-grid">
+                        <p class="empty-state">Awaiting scan data...</p>
+                    </div>
+                </section>
+
+                <!-- CENTER: EXPLAINABLE AI -->
+                <section class="panel glass xai-panel">
+                    <div class="panel-header">
+                        <span class="icon">🧠</span>
+                        <h3>EXPLAINABLE AI (XAI)</h3>
+                    </div>
+                    <div id="xai-container" class="xai-grid">
+                        <p class="empty-state">Processing intelligence...</p>
+                    </div>
+                </section>
+
+                <!-- RIGHT: RISK ASSESSMENT -->
+                <section class="panel glass assessment-panel">
+                    <div class="panel-header">
+                        <span class="icon">📊</span>
+                        <h3>RISK ASSESSMENT</h3>
+                    </div>
+                    <div class="assessment-container">
+                        <div id="risk-index" class="risk-index pulse">0.00</div>
+                        <p class="label">INTEGRATED RISK INDEX</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- BOTTOM SECTION -->
+            <section class="panel glass report-center">
+                <div class="panel-header">
+                    <span class="icon">📄</span>
+                    <h3>REPORT CENTER</h3>
+                </div>
+                <div class="report-controls">
+                    <div class="user-meta">
+                        <input type="text" id="user-name" placeholder="OPERATOR NAME">
+                        <select id="domain-select">
+                            <option value="Residential">RESIDENTIAL</option>
+                            <option value="Healthcare">HEALTHCARE</option>
+                            <option value="Industrial">INDUSTRIAL</option>
+                            <option value="Corporate">CORPORATE</option>
+                        </select>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="gen-report" class="btn-secondary">GENERATE PDF</button>
+                        <button id="gen-pers-report" class="btn-secondary">EMAIL REPORT</button>
+                        <button id="export-json" class="btn-secondary">EXPORT JSON</button>
+                    </div>
+                    <div id="report-status" class="report-status">
+                        READY FOR INTELLIGENCE GENERATION
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="system-footer">
+            <p>VERITAS AI v3.0 | SECURE UPLINK ACTIVE | &copy; 2026</p>
+        </footer>
+    </div>
+
+    <!-- Notification Overlay -->
+    <div id="notification" class="notification hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

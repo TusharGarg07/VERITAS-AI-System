@@ -27,12 +27,30 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+# Modular Router Imports
+try:
+    from veritas.api.routes import simulation, actions, report, personalized_report
+    from veritas.config.settings import settings
+except ImportError as e:
+    logger.warning(f"Modular routes not found: {e}. Some dashboard features may be disabled.")
+    simulation = actions = report = personalized_report = None
+
 # --- INITIALIZATION ---
 app = FastAPI(
     title="VERITAS",
     description="Versatile Environmental Risk Intelligence & Transparency Analysis System",
     version="3.0.0"
 )
+
+# --- MODULAR ROUTE INTEGRATION ---
+if simulation:
+    app.include_router(simulation.router, prefix="/api/v1")
+if actions:
+    app.include_router(actions.router, prefix="/api/v1")
+if report:
+    app.include_router(report.router, prefix="/api/v1")
+if personalized_report:
+    app.include_router(personalized_report.router, prefix="/api/v1")
 
 # Setup templates
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -105,9 +123,9 @@ class AnalysisResponse(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     global model, scaler, feature_names, target_labels
-    print("--> Loading VERITAS model and artifacts...")
+    logger.info("--> Loading VERITAS model and artifacts...")
     if not os.path.exists(BUNDLE_PATH):
-        print(f"❌ WARNING: Model bundle not found at '{BUNDLE_PATH}'. Application will run but predictions will fail.")
+        logger.warning(f"Model bundle not found at '{BUNDLE_PATH}'. Application will run but predictions will fail.")
         return
     
     try:
@@ -124,13 +142,13 @@ async def startup_event():
         # sklearn 1.8.0+ expects 'estimator' attribute, but 1.6.1 pickle has 'base_estimator'
         if model is not None:
             if hasattr(model, 'base_estimator') and not hasattr(model, 'estimator'):
-                print("⚠️ Patching model: Setting model.estimator = None to fix sklearn compatibility.")
+                logger.info("Patching model: Setting model.estimator = None to fix sklearn compatibility.")
                 model.estimator = None
 
         if model is None or scaler is None or feature_names is None or target_labels is None:
              # Fallback for feature names if absolutely necessary (based on app.py history)
              if feature_names is None:
-                 print("⚠️ Feature names not found in bundle. Using default fallback.")
+                 logger.info("Feature names not found in bundle. Using default fallback.")
                  feature_names = [
                     'hour', 'day_of_week', 'is_weekend', 'hour_sin', 'hour_cos',
                     'temperature', 'humidity', 'co2', 'pm2.5', 'pm10', 'tvoc', 'co',
@@ -146,9 +164,9 @@ async def startup_event():
              if target_labels is None:
                  raise ValueError(f"Model bundle missing required keys. Found: {list(bundle.keys())}")
 
-        print(f"✅ VERITAS Model and artifacts loaded successfully. ({len(feature_names)} features)")
+        logger.info(f"VERITAS Model and artifacts loaded successfully. ({len(feature_names)} features)")
     except Exception as e:
-        print(f"❌ FATAL ERROR: Could not load model. Details: {e}")
+        logger.error(f"FATAL ERROR: Could not load model. Details: {e}")
 
 # --- HELPER FUNCTIONS ---
 def prepare_input_features(data: SensorData, feature_names: List[str]):
@@ -171,11 +189,19 @@ def prepare_input_features(data: SensorData, feature_names: List[str]):
     # Simulate history (since we only have one data point, we assume steady state for 24h)
     history_df = pd.concat([df] * 24, ignore_index=True)
     # Pandas >=2.x deprecated 'H' frequency alias. Using lowercase 'h' for hourly frequency compatibility.
-    history_df.index = pd.date_range(
-        end=df.index[0],
-        periods=24,
-        freq='h'
-    )
+    try:
+        history_df.index = pd.date_range(
+            end=df.index[0],
+            periods=24,
+            freq='h'
+        )
+    except Exception as e:
+        logger.warning(f"Date range generation failed: {e}")
+        history_df.index = pd.date_range(
+            end=pd.Timestamp.now(),
+            periods=24,
+            freq='h'
+        )
     
     df_out = history_df.copy()
     df_out['hour'] = df_out.index.hour
@@ -288,6 +314,7 @@ def send_email_task(to_email: str, subject: str, html_content: str):
         msg['From'] = EMAIL_USER
         msg['To'] = to_email
         msg['Subject'] = subject
+
         msg.attach(MIMEText(html_content, 'html'))
 
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
@@ -299,9 +326,10 @@ def send_email_task(to_email: str, subject: str, html_content: str):
         print(f"❌ Failed to send email to {to_email}: {e}")
 
 # --- ROUTES ---
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+# Comment out the template route to use the static frontend instead
+# @app.get("/", response_class=HTMLResponse)
+# async def read_root(request: Request):
+#     return templates.TemplateResponse(request, "index.html")       
 
 @app.post("/api/analyze", response_model=AnalysisResponse)
 async def analyze_environment(data: SensorData, background_tasks: BackgroundTasks):
@@ -473,6 +501,10 @@ async def analyze_environment(data: SensorData, background_tasks: BackgroundTask
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+# --- STATIC FRONTEND ---
+app.mount("/reports", StaticFiles(directory=os.path.join(BASE_DIR, "reports")), name="reports")
+app.mount("/", StaticFiles(directory=os.path.join(BASE_DIR, "veritas", "frontend"), html=True), name="frontend")
 
 if __name__ == '__main__':
     import uvicorn
