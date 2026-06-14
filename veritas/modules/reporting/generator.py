@@ -28,7 +28,7 @@ class VeritasPDFGenerator:
         try:
             if not output_path:
                 report_id = f"VR-{datetime.now().strftime('%Y%m%d')}-{str(uuid4())[:8]}"
-                output_path = f"veritas/reports/report_{report_id}.pdf"
+                output_path = f"reports/report_{report_id}.pdf"
 
             # Ensure directory exists
             os.makedirs(os.path.dirname(output_path), exist_ok=True)

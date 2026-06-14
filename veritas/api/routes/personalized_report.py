@@ -46,16 +46,22 @@ async def create_personalized_report(request: PersonalizedReportRequest, backgro
             ]
         }
         
-        # 3. Generate Enterprise PDF
+        # 3. Ensure reports directory exists
+        os.makedirs("reports", exist_ok=True)
+        
+        # 4. Generate Enterprise PDF
         output_filename = f"report_{report_id[:8]}.pdf"
-        output_path = os.path.join("veritas", "reports", output_filename)
+        output_path = os.path.join("reports", output_filename)
         
         file_path = pdf_generator.generate(
             data=report_payload,
             output_path=output_path
         )
         
-        # 4. Email Delivery
+        # 5. Generate public download URL
+        download_url = f"/reports/{output_filename}"
+        
+        # 6. Email Delivery
         background_tasks.add_task(
             email_sender.send_email_task,
             to_email=request.user_email,
@@ -68,7 +74,8 @@ async def create_personalized_report(request: PersonalizedReportRequest, backgro
             status="success",
             report_id=report_id,
             email_sent=True,
-            file_path=file_path
+            file_path=file_path,
+            download_url=download_url
         )
 
     except Exception as e:
