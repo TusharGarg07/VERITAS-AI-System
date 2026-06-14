@@ -503,7 +503,9 @@ async def analyze_environment(data: SensorData, background_tasks: BackgroundTask
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- STATIC FRONTEND ---
-app.mount("/reports", StaticFiles(directory=os.path.join(BASE_DIR, "reports")), name="reports")
+reports_dir = os.path.join(BASE_DIR, "reports")
+os.makedirs(reports_dir, exist_ok=True)
+app.mount("/reports", StaticFiles(directory=reports_dir), name="reports")
 app.mount("/", StaticFiles(directory=os.path.join(BASE_DIR, "veritas", "frontend"), html=True), name="frontend")
 
 if __name__ == '__main__':
